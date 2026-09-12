@@ -3,3 +3,22 @@ LABEL maintainer=jon@jaggersoft.com
 
 COPY install.sh .
 RUN ./install.sh && rm ./install.sh
+
+# Node reads and writes compiled JavaScript here, and every image built on this
+# one inherits the setting, so no cyber-dojo.sh has to know about it. What
+# makes it pay is that it is warmed at build time: see
+# warm_node_compile_cache.sh and docs/node-compile-cache.md.
+#
+# Set after the install above rather than before it, so that npm, which runs as
+# root, does not fill the cache with its own modules. Node names the directory
+# after the uid that wrote it, so anything root writes here is a directory no
+# kata can read: image size paid for nothing.
+ENV NODE_COMPILE_CACHE=/node-compile-cache
+RUN mkdir -p /node-compile-cache && chown sandbox /node-compile-cache
+
+# Warmed as sandbox, the user a kata runs as, for the same reason.
+COPY warm_node_compile_cache.sh .
+USER sandbox
+RUN ./warm_node_compile_cache.sh
+USER root
+RUN rm ./warm_node_compile_cache.sh
