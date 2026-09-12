@@ -1,0 +1,5 @@
+FROM node:current-alpine
+LABEL maintainer=jon@jaggersoft.com
+
+COPY install.sh .
+RUN ./install.sh && rm ./install.sh
