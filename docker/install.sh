@@ -16,3 +16,23 @@ npm install --prefix /etc/ts 'typescript@^6'
 # image that builds on this one adds packages beside them, so ownership is set
 # again there.
 chown -R sandbox /etc/ts
+
+# Records the TypeScript this image holds, in the shape every image shares.
+# The installed compiler is asked, so the version is one the image can run
+# rather than the range named above. tsc --version prints "Version 6.0.3".
+readonly LANGUAGE_VERSION=$(/etc/ts/node_modules/.bin/tsc --version | cut -d' ' -f2)
+
+if [ -z "${LANGUAGE_VERSION}" ]; then
+  echo 'Could not read a version from tsc --version' >&2
+  exit 1
+fi
+
+cat > /versions.json <<EOF
+{
+  "language": {
+    "name": "TypeScript",
+    "version": "${LANGUAGE_VERSION}"
+  },
+  "test_frameworks": []
+}
+EOF
